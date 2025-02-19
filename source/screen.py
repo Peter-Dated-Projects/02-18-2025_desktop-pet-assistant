@@ -31,6 +31,11 @@ class Window:
         # last time window was alive
         self._last_alive = 0
 
+        self._collision_lines = [
+            pygame.Rect(rect.topleft, (rect.width, 1)),
+            pygame.Rect(rect.bottomleft, (rect.width, 1)),
+        ]
+
     # -------------------------------------------------------- #
     # logic
     # -------------------------------------------------------- #
@@ -45,6 +50,12 @@ class Window:
         self._pid = window._pid
         self._zlevel = window._zlevel
         self._onscreen = window._onscreen
+
+        # udpate collision lines
+        self._collision_lines = [
+            pygame.Rect(self._rect.topleft, (self._rect.width, 1)),
+            pygame.Rect(self._rect.bottomleft, (self._rect.width, 1)),
+        ]
 
     # -------------------------------------------------------- #
     # utils

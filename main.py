@@ -5,6 +5,7 @@ import PyQt5.QtCore as qtc
 import os
 import sys
 import time
+import pygame
 
 from source import constants
 
@@ -14,6 +15,9 @@ from source import constants
 
 from source import world
 from source import screen
+from source import signal
+
+from game import assistant
 
 
 class DesktopPetAssistant(qtw.QMainWindow):
@@ -26,6 +30,10 @@ class DesktopPetAssistant(qtw.QMainWindow):
         # -------------------------------------------------------- #
         # internal logic
         # -------------------------------------------------------- #
+
+        constants.WINDOW_CONTEXT = self
+        constants.SIGNAL_HANDLER = signal.SignalHandler()
+
         self._world = world.World()
         self.initUI()
 
@@ -38,9 +46,20 @@ class DesktopPetAssistant(qtw.QMainWindow):
         # -------------------------------------------------------- #
         # game loop
         # -------------------------------------------------------- #
+
         self.timer = qtc.QTimer()
         self.timer.timeout.connect(self.game_loop)
         self.timer.start(1000 // constants.FPS)
+        constants.END_TIME = time.time()
+
+        # -------------------------------------------------------- #
+        # game objects
+        # -------------------------------------------------------- #
+
+        self._world.add_entity(assistant.Assistant())
+        self._rect = pygame.Rect(
+            0, 0, constants.WINDOW_SIZE[0], constants.WINDOW_SIZE[1]
+        )
 
     def initUI(self):
         # check if mac or not
@@ -50,8 +69,9 @@ class DesktopPetAssistant(qtw.QMainWindow):
 
         # create a pyqt5 app that fills the entire visible screen with a transparent background
         screen_size = self._world._visible_world_rect
-        print(f"Screen: {screen_size[0]}x{screen_size[1]}")
+        print(f"Screen: {screen_size[2]}x{screen_size[3]}")
         print(f"Screen topleft: {self._world._visible_world_rect.topleft}")
+
         self.setGeometry(0, 0, constants.WINDOW_SIZE[0], constants.WINDOW_SIZE[1])
 
         # window params
@@ -62,9 +82,6 @@ class DesktopPetAssistant(qtw.QMainWindow):
         self.setWindowFlags(self.windowFlags() | qtc.Qt.WindowStaysOnTopHint)
         self.show()
 
-        # Define the region where inputs should be captured
-        self.rect = qtc.QRect(100, 100, 300, 300)  # Example region
-
         # Install event filter
         self.app.installEventFilter(self)
 
@@ -74,7 +91,7 @@ class DesktopPetAssistant(qtw.QMainWindow):
             qtc.QEvent.MouseButtonRelease,
             qtc.QEvent.MouseMove,
         ):
-            if not self.rect.contains(event.pos()):
+            if not self._rect.collidepoint((event.pos().x(), event.pos().y())):
                 return False  # Pass through the event
         # print(event)
         return super().eventFilter(obj, event)
@@ -84,13 +101,36 @@ class DesktopPetAssistant(qtw.QMainWindow):
         constants.DELTA_TIME = constants.START_TIME - constants.END_TIME
         constants.END_TIME = constants.START_TIME
 
+        constants.RUNTIME += constants.DELTA_TIME
+
         # Update the world with the delta time
         self._world.update()
+
+        # update geometry
+        print(self._rect)
+        self.setGeometry(
+            self._rect.x,
+            self._rect.y,
+            self._rect.width,
+            self._rect.height,
+        )
 
     # draw event
     def paintEvent(self, event):
         painter = qtg.QPainter(self)
         painter.drawPixmap(0, 0, self._framebuffer)
+
+    def mousePressEvent(self, event):
+        if event.button() == qtc.Qt.LeftButton:
+            self.drag_position = event.globalPos() - self.frameGeometry().topLeft()
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == qtc.Qt.LeftButton:
+            new_pos = event.globalPos() - self.drag_position
+            self.move(new_pos)
+            self._rect.topleft = (new_pos.x(), new_pos.y())
+            event.accept()
 
     def run(self):
         sys.exit(self.app.exec_())

@@ -2,6 +2,9 @@ import pygame
 
 from . import constants
 from . import screen
+from . import signal
+
+from . import physics
 
 
 # ============================================================ #
@@ -15,16 +18,25 @@ class World:
         self._windows = {}
         self._windows_ref = set()
 
+        # entities
+        self._entites = {}
+
         # store the visible world in a list of rects
         # one rect for each monitor
         self._monitors = screen.MonitorRetrieval.get_all_monitors()
         self._visible_world_rect = pygame.Rect(0, 0, 0, 0)
         for monitor in self._monitors:
             self._visible_world_rect.union_ip(monitor._rect)
+            print(monitor, self._visible_world_rect)
         # find min topleft corner
         self._visible_world_rect.topleft = (
             min([monitor._rect.topleft[0] for monitor in self._monitors]),
-            min([monitor._rect.topleft[1] for monitor in self._monitors]),
+            min([-monitor._rect.topleft[1] for monitor in self._monitors]),
+        )
+
+        # initialize the signal for when entity exits world
+        self._entity_exit_signal = constants.SIGNAL_HANDLER.register_signal(
+            constants.ENTITY_EXIT_SIGNAL, [physics.entity.Entity]
         )
 
     # -------------------------------------------------------- #
@@ -32,7 +44,9 @@ class World:
     # -------------------------------------------------------- #
 
     def update(self):
-
+        # -------------------------------------------------------- #
+        # update windows
+        # -------------------------------------------------------- #
         print("-" * 40)
         for window in screen.WindowManager.get_all_windows():
             # print(window)
@@ -52,13 +66,77 @@ class World:
             # check if onscreen or not
             if not window._onscreen:
                 continue
+
+            # TODO - remove debug
             print(window)
         for c in changes:
             self.remove_window(c._window_id)
 
+        print("*" * 40)
+        for monitor in self._monitors:
+            print(monitor)
+
+        # -------------------------------------------------------- #
+        # update visible world
+        # -------------------------------------------------------- #
+        changes = []
+        for entity in self._entites.values():
+            entity.update()
+            if entity.dead:
+                changes.append(entity)
+        for c in changes:
+            self.remove_entity(c)
+
+    def move_entity(self, entity):
+        touching = {"left": False, "right": False, "top": False, "bottom": False}
+        entity.position.xy += entity.velocity.xy * constants.DELTA_TIME
+
+        # check if entity exits visible windows
+        if not self.in_visible_world(entity.rect):
+            # TODO - entity should not be moving at MACH 10 speed lol
+            # find closest monitor
+            closest_monitor = None
+            for monitor in self._monitors:
+                if monitor._rect.colliderect(entity.rect):
+                    closest_monitor = monitor
+                    break
+
+            if not closest_monitor:
+                print("ENTITY EXITED SCREEN")
+            else:
+                self._entity_exit_signal.emit(entity)
+
+                # Update touching based on the closest monitor
+                if entity.rect.left < closest_monitor._rect.left:
+                    touching["left"] = True
+                if entity.rect.right > closest_monitor._rect.right:
+                    touching["right"] = True
+                if entity.rect.top < closest_monitor._rect.top:
+                    touching["top"] = True
+                if entity.rect.bottom > closest_monitor._rect.bottom:
+                    touching["bottom"] = True
+
+        # only interact on y axis
+        for rect in self.collide_windows(entity.rect):
+            if entity.rect.colliderect(rect):
+                if rect.top == entity.rect.bottom:
+                    touching["bottom"] = True
+                if rect.bottom == entity.rect.top:
+                    touching["top"] = True
+                entity.velocity.y = 0
+                break
+
+        return touching
+
     # -------------------------------------------------------- #
-    # utils
-    # -------------------------------------------------------- #
+
+    def collide_windows(self, rect):
+        for window in self._windows_ref:
+            if window.is_inside(rect):
+                if window._collision_lines[0].colliderect(rect):
+                    yield window._collision_lines[0]
+                if window._collision_lines[1].colliderect(rect):
+                    yield window._collision_lines[1]
 
     def add_window(self, window: screen.Window):
         self._windows[window._window_id] = window
@@ -80,3 +158,13 @@ class World:
             if monitor._rect.contains(rect):
                 return True
         return False
+
+    def add_entity(self, entity):
+        self._entites[id(entity)] = entity
+        entity._world = self
+
+    def remove_entity(self, entity):
+        del self._entites[id(entity)]
+
+    def get_entity(self, entity_id):
+        return self._entites.get(entity_id)
