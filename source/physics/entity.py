@@ -13,7 +13,7 @@ class Entity(QWidget):
         super().__init__()
         self.position = pygame.math.Vector2(x, y)
         self.velocity = pygame.math.Vector2(0, 0)
-        self.rect = pygame.Rect(x, y, width, height)
+        self.rect = pygame.FRect(x, y, width, height)
         self.components = []
 
         self.dead = False
@@ -27,7 +27,9 @@ class Entity(QWidget):
 
     def add_component(self, component):
         self.components.append(component)
+        component.entity = self
+        component.__post_init__()
 
     def update(self):
         for component in self.components:
-            component.update(self)
+            component.update()

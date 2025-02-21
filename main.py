@@ -38,10 +38,20 @@ class DesktopPetAssistant(qtw.QMainWindow):
         self.initUI()
 
         # TODO - remove debug canvas
-        self._framebuffer = qtg.QPixmap(
-            constants.WINDOW_SIZE[0], constants.WINDOW_SIZE[1]
+        self.setAttribute(qtc.Qt.WA_NoSystemBackground, True)
+        self.setAttribute(qtc.Qt.WA_TranslucentBackground, True)
+        t_image = qtg.QImage(
+            constants.WINDOW_SIZE[0],
+            constants.WINDOW_SIZE[1],
+            qtg.QImage.Format_ARGB32_Premultiplied,
         )
-        self._framebuffer.fill(qtg.QColor(255, 192, 203))
+        t_image.fill(qtg.QColor(0, 0, 0, 0))
+        self._framebuffer = qtg.QPixmap.fromImage(t_image)
+
+        self._fb_painter = qtg.QPainter(self._framebuffer)
+        self._fb_painter.setCompositionMode(qtg.QPainter.CompositionMode_SourceOver)
+        self._fb_painter.setRenderHint(qtg.QPainter.Antialiasing, False)
+        self._fb_painter.end()
 
         # -------------------------------------------------------- #
         # game loop
@@ -78,7 +88,7 @@ class DesktopPetAssistant(qtw.QMainWindow):
         self.setWindowTitle("Hello World")
         self.setWindowFlags(qtc.Qt.FramelessWindowHint)
         self.setAttribute(qtc.Qt.WA_TranslucentBackground)
-        self.setStyleSheet("background:rgba(255, 192, 203, 1.0);")
+        self.setStyleSheet("background:rgba(0, 0, 0, 0);")
         self.setWindowFlags(self.windowFlags() | qtc.Qt.WindowStaysOnTopHint)
         self.show()
 
@@ -97,17 +107,25 @@ class DesktopPetAssistant(qtw.QMainWindow):
         return super().eventFilter(obj, event)
 
     def game_loop(self):
+        if not constants.RUNNING:
+            self.app.quit()
+            return
+
         constants.START_TIME = time.time()
         constants.DELTA_TIME = constants.START_TIME - constants.END_TIME
         constants.END_TIME = constants.START_TIME
-
         constants.RUNTIME += constants.DELTA_TIME
+
+        # create framebuffer painter
+        self._framebuffer.fill(qtg.QColor(0, 0, 0, 0))
+        self._fb_painter.begin(self._framebuffer)
 
         # Update the world with the delta time
         self._world.update()
 
+        self._fb_painter.end()
+
         # update geometry
-        print(self._rect)
         self.setGeometry(
             self._rect.x,
             self._rect.y,
@@ -115,9 +133,11 @@ class DesktopPetAssistant(qtw.QMainWindow):
             self._rect.height,
         )
 
-    # draw event
+        self.update()
+
     def paintEvent(self, event):
         painter = qtg.QPainter(self)
+        painter.setRenderHint(qtg.QPainter.Antialiasing, False)
         painter.drawPixmap(0, 0, self._framebuffer)
 
     def mousePressEvent(self, event):
