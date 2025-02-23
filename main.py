@@ -53,6 +53,9 @@ class DesktopPetAssistant(qtw.QMainWindow):
         self._fb_painter.setRenderHint(qtg.QPainter.Antialiasing, False)
         self._fb_painter.end()
 
+        self._rect = pygame.Rect(
+            0, 0, constants.WINDOW_SIZE[0], constants.WINDOW_SIZE[1]
+        )
         # -------------------------------------------------------- #
         # game loop
         # -------------------------------------------------------- #
@@ -67,9 +70,6 @@ class DesktopPetAssistant(qtw.QMainWindow):
         # -------------------------------------------------------- #
 
         self._world.add_entity(assistant.Assistant())
-        self._rect = pygame.Rect(
-            0, 0, constants.WINDOW_SIZE[0], constants.WINDOW_SIZE[1]
-        )
 
     def initUI(self):
         # check if mac or not
@@ -123,6 +123,7 @@ class DesktopPetAssistant(qtw.QMainWindow):
         # Update the world with the delta time
         self._world.update()
 
+        # end of render
         self._fb_painter.end()
 
         # update geometry

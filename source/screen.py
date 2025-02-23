@@ -111,7 +111,7 @@ if sys.platform == "darwin":
                 # NSRect values are in points.
                 global_rect = pygame.Rect(
                     int(frame.origin.x),
-                    int(frame.origin.y),
+                    -int(frame.origin.y),
                     int(frame.size.width),
                     int(frame.size.height),
                 )
@@ -119,7 +119,6 @@ if sys.platform == "darwin":
             return monitors
 
     class WindowManager:
-
         @classmethod
         def get_all_windows(cls):
             windows = []

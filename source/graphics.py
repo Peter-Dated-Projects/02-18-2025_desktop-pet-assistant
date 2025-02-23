@@ -6,12 +6,13 @@ from source.components import c_sprite
 
 from source import constants
 
+
 # ============================================================ #
-# Animation Handler
+# Animation Class
 # ============================================================ #
 
 
-class AnimationHandler:
+class Animation:
     CACHE = {}
 
     @classmethod
@@ -22,18 +23,8 @@ class AnimationHandler:
     def get_animation(cls, name):
         return cls.CACHE.get(name)
 
-    @classmethod
-    def remove_animation(cls, name):
-        if name in cls.CACHE:
-            del cls.CACHE[name]
+    # -------------------------------------------------------- #
 
-
-# ============================================================ #
-# Animation Class
-# ============================================================ #
-
-
-class Animation:
     def __init__(self, frames: list):
         self._sprite_frames = [
             c_sprite.SpriteComponent(frame[0], metadata={"duration": frame[1]})
@@ -60,20 +51,39 @@ class AnimationRegistry:
         self._current_animation = None
         self._frame = 0
         self._timer = 0
+        self._finished = False
+        self._hold_frame = False
 
     # -------------------------------------------------------- #
     # logic
     # -------------------------------------------------------- #
 
     def update(self):
+        if self._hold_frame:
+            return
         self._timer += constants.DELTA_TIME
-        if self._timer > self._parent._sprite_frames[self._frame]._metadata["duration"]:
+        self._finished = (
+            self._timer > self._parent._sprite_frames[self._frame]._metadata["duration"]
+        )
+        if self._finished:
             self._timer = 0
             self._frame += 1
             self._frame %= self._parent._frame_count
 
     def get_current_frame(self):
         return self._parent._sprite_frames[self._frame]
+
+    def set_animation(self, name: str):
+        self._current_animation = name
+        self.reset()
+
+    def reset(self):
+        self._frame = 0
+        self._timer = 0
+        self._finished = False
+
+    def set_hold_frame(self, hold: bool):
+        self._hold_frame = hold
 
 
 # ============================================================ #
@@ -154,5 +164,8 @@ def load_animations(json_path: str):
         end_index = tag.get("to", 0)
         # The 'from' and 'to' indices are inclusive.
         animations[tag_name] = Animation(frames[start_index : end_index + 1])
+
+        # cache animation
+        Animation.add_animation(tag_name, animations[tag_name])
 
     return spritesheet, animations

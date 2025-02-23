@@ -40,3 +40,9 @@ if sys.platform == "darwin":
     ]
 elif sys.platform == "win32":
     pass
+
+
+# ============================================================ #
+# env variables
+
+GRAVITY = 9.8

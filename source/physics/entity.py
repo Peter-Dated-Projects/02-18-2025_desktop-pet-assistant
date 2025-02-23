@@ -17,6 +17,7 @@ class Entity(QWidget):
         self.components = []
 
         self.dead = False
+        self._extra = {}
 
         # world reference
         self._world = None
@@ -30,6 +31,19 @@ class Entity(QWidget):
         component.entity = self
         component.__post_init__()
 
+        return component
+
     def update(self):
         for component in self.components:
             component.update()
+            print("updating comp", component)
+
+    # -------------------------------------------------------- #
+    # special functions
+    # -------------------------------------------------------- #
+
+    def __setitem__(self, key, value):
+        self._extra[key] = value
+
+    def __getitem__(self, key):
+        return self._extra[key]
