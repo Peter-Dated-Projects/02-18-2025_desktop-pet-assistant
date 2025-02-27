@@ -29,7 +29,8 @@ class SpriteComponent(c_component.Component):
             bytes_per_line,
             QImage.Format_RGBA8888,
         )
-        self._qpixmap = QPixmap(self._qimage)
+        self._qimage = self._qimage.convertToFormat(QImage.Format_ARGB32_Premultiplied)
+        self._qpixmap = QPixmap.fromImage(self._qimage)
 
     # -------------------------------------------------------- #
     # logic

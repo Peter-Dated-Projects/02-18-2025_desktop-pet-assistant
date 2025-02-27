@@ -46,12 +46,12 @@ class World:
     def update(self):
         # -------------------------------------------------------- #
         # print monitors
-        print("-" * 40)
-        for monitor in screen.MonitorRetrieval.get_all_monitors():
-            print(monitor)
+        # print("-" * 40)
+        # for monitor in screen.MonitorRetrieval.get_all_monitors():
+        #     print(monitor)
         # -------------------------------------------------------- #
         # update windows
-        print("*" * 40)
+        # print("*" * 40)
         for window in screen.WindowManager.get_all_windows():
             # print(window)
             if window._window_id not in self._windows:

@@ -117,8 +117,9 @@ class DesktopPetAssistant(qtw.QMainWindow):
         constants.RUNTIME += constants.DELTA_TIME
 
         # create framebuffer painter
-        self._framebuffer.fill(qtg.QColor(0, 0, 0, 0))
         self._fb_painter.begin(self._framebuffer)
+        self._fb_painter.setRenderHint(qtg.QPainter.Antialiasing, False)
+        self._framebuffer.fill(qtg.QColor(0, 0, 0, 0))
 
         # Update the world with the delta time
         self._world.update()

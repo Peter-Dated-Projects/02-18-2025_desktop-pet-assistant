@@ -36,7 +36,7 @@ class Entity(QWidget):
     def update(self):
         for component in self.components:
             component.update()
-            print("updating comp", component)
+            # print("updating comp", component)
 
     # -------------------------------------------------------- #
     # special functions

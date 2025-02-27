@@ -95,6 +95,7 @@ DIG_DIRT_TRANSITIONS = [DIG_TO_POOP_TRANSITION_STATE]
 DIG_TO_POOP_TRANSITION_TRANSITIONS = [POOP_STATE]
 POOP_TRANSITIONS = [IDLE_STATE]
 LICK_PAW_TRANSITIONS = [IDLE_STATE]
+RUN_TRANSITIONS = [IDLE_STATE]
 
 SIT_TO_IDLE_TRANSITION_TRANSITIONS = [IDLE_STATE]
 IDLE_TO_SIT_TRANSITION_TRANSITIONS = [SIT_STATE]
@@ -125,9 +126,9 @@ class IdleState(c_statemachine.State):
         pass
 
     def update(self):
-        print(
-            f"CURRENT: IDLE -- {self._wait_time:5.2f} | Counter: {self._counter:5.2f}"
-        )
+        # print(
+        #     f"CURRENT: IDLE -- {self._wait_time:5.2f} | Counter: {self._counter:5.2f}"
+        # )
         self._counter += constants.DELTA_TIME
         if self._counter > self._wait_time:
             self._statemachine.entity._c_statemachine.queue_state_change(
@@ -183,13 +184,13 @@ class HoldFrameState(c_statemachine.State):
             )
 
 
-# walk state
 class WalkState(c_statemachine.State):
 
     def __init__(self):
         super().__init__()
 
         self._target_position = pygame.Vector2(0, 0)
+        self._enter_run = False
 
     # -------------------------------------------------------- #
     # logic
@@ -198,14 +199,27 @@ class WalkState(c_statemachine.State):
     def enter(self):
         self._statemachine.entity._c_animation.set_animation(random.choice(WALK))
         self._target_position = self._generate_target_position()
+        self._enter_run = random.choice([True, False, True])
+
+        # extra info
+        self._statemachine.entity["target_location"] = self._target_position
 
     def update(self):
-        print(
-            f"CURRENT: WALK -- {self._target_position} | {self._statemachine.entity.position.xy}"
+        # print(
+        #     f"CURRENT: WALK -- {self._target_position} | {self._statemachine.entity.position.xy}"
+        # )
+
+        # check distance
+        t_distance = self._statemachine.entity.position.distance_to(
+            self._target_position
         )
 
+        # check if should run
+        if self._enter_run and t_distance < 100:
+            self._statemachine.entity._c_statemachine.queue_state_change(RUN_STATE)
+            return
         # check if at target position
-        if self._statemachine.entity.position.distance_to(self._target_position) < 10:
+        if t_distance < 10:
             self._statemachine.entity._c_statemachine.queue_state_change(
                 random.choice(WALK_TRANSITIONS)
             )
@@ -235,7 +249,7 @@ class WalkState(c_statemachine.State):
         )
         t_position = t_window._rect.topleft
 
-        return [t_offset[0] + t_position[0], t_offset[1] + t_position[1]]
+        return pygame.Vector2(t_offset[0] + t_position[0], t_offset[1] + t_position[1])
 
 
 class RestingState(c_statemachine.State):
@@ -257,9 +271,9 @@ class RestingState(c_statemachine.State):
         self._statemachine.entity.velocity.x = 0
 
     def update(self):
-        print(
-            f"CURRENT: REST -- {self._wait_time:5.2f} | Counter: {self._counter:5.2f}"
-        )
+        # print(
+        #     f"CURRENT: REST -- {self._wait_time:5.2f} | Counter: {self._counter:5.2f}"
+        # )
         self._counter += constants.DELTA_TIME
         if self._counter > self._wait_time:
             self._statemachine.entity._c_statemachine.queue_state_change(
@@ -285,9 +299,9 @@ class LickPawState(c_statemachine.State):
         self._statemachine.entity.velocity.x = 0
 
     def update(self):
-        print(
-            f"CURRENT: REST -- {self._wait_time:5.2f} | Counter: {self._counter:5.2f}"
-        )
+        # print(
+        #     f"CURRENT: REST -- {self._wait_time:5.2f} | Counter: {self._counter:5.2f}"
+        # )
         self._counter += constants.DELTA_TIME
         if self._counter > self._wait_time:
             self._statemachine.entity._c_statemachine.queue_state_change(
@@ -295,32 +309,38 @@ class LickPawState(c_statemachine.State):
             )
 
 
-# ---------------------------
-# Run State
-# ---------------------------
 class RunState(c_statemachine.State):
     def __init__(self):
         super().__init__()
         self._target_position = pygame.Vector2(0, 0)
-        # Increase speed relative to walking (e.g., 1.5x the max velocity)
-        self._run_speed = MAX_VELOCITY * 1.5
+        # Increase speed relative to walking (e.g., 2x the max velocity)
+        self._run_speed = MAX_VELOCITY * 2
+
+    # -------------------------------------------------------- #
+    # logic
+    # -------------------------------------------------------- #
 
     def enter(self):
         # Set a running animation chosen from the RUN array.
         self._statemachine.entity._c_animation.set_animation(random.choice(RUN))
         # Generate a target position using similar logic to WalkState.
-        self._target_position = self._generate_target_position()
+        self._target_position = self._statemachine.entity["target_location"]
         print(f"[RunState] Entered: target_position set to {self._target_position}")
 
     def update(self):
-        print(
-            f"[RunState] Updating: Current position {self._statemachine.entity.position.xy}, Target: {self._target_position}"
+        # print(
+        #     f"[RunState] Updating: Current position {self._statemachine.entity.position.xy}, Target: {self._target_position}"
+        # )
+
+        t_distance = self._statemachine.entity.position.distance_to(
+            self._target_position
         )
+
         # Check if the entity is close enough to the target.
-        if self._statemachine.entity.position.distance_to(self._target_position) < 10:
-            # Transition back to a slower state (using WALK_TRANSITIONS as an example)
+        if t_distance < 10:
+            # go back to idle
             self._statemachine.entity._c_statemachine.queue_state_change(
-                random.choice(WALK_TRANSITIONS)
+                random.choice(RUN_TRANSITIONS)
             )
             return
 
@@ -329,28 +349,7 @@ class RunState(c_statemachine.State):
         direction = direction.normalize() * self._run_speed
         self._statemachine.entity.velocity.xy = direction
 
-    def _generate_target_position(self):
-        # Similar approach as in WalkState: choose a monitor and a window's top-left position.
-        t_monitor = random.choice(screen.MonitorRetrieval.get_all_monitors())
-        valid_windows = [
-            w
-            for w in screen.WindowManager.get_all_windows()
-            if t_monitor._rect.contains(w._rect)
-        ]
-        if valid_windows:
-            t_window = random.choice(valid_windows)
-            print(
-                f"[RunState] Generated target from window at {t_window._rect.topleft}"
-            )
-            return pygame.Vector2(t_window._rect.topleft)
-        else:
-            print("[RunState] No valid windows found, defaulting to (0,0)")
-            return pygame.Vector2(0, 0)
 
-
-# ---------------------------
-# Sit State
-# ---------------------------
 class SitState(c_statemachine.State):
     def __init__(self):
         super().__init__()
@@ -367,7 +366,7 @@ class SitState(c_statemachine.State):
         print(f"[SitState] Entered: waiting for {self._wait_time:.2f} seconds.")
 
     def update(self):
-        print(f"[SitState] Updating: Counter {self._counter:.2f}/{self._wait_time:.2f}")
+        # print(f"[SitState] Updating: Counter {self._counter:.2f}/{self._wait_time:.2f}")
         self._counter += constants.DELTA_TIME
         # Once the sitting duration is over, transition via the designated transition state.
         if self._counter > self._wait_time:
@@ -376,14 +375,15 @@ class SitState(c_statemachine.State):
             )
 
 
-# ---------------------------
-# Bow Sit State
-# ---------------------------
 class BowSitState(c_statemachine.State):
     def __init__(self):
         super().__init__()
         self._wait_time = 0
         self._counter = 0
+
+    # -------------------------------------------------------- #
+    # logic
+    # -------------------------------------------------------- #
 
     def enter(self):
         # Choose a bow-sit animation (using BOWSIT here; alternatively, BOWSITIDK could be used).
@@ -395,9 +395,9 @@ class BowSitState(c_statemachine.State):
         print(f"[BowSitState] Entered: waiting for {self._wait_time:.2f} seconds.")
 
     def update(self):
-        print(
-            f"[BowSitState] Updating: Counter {self._counter:.2f}/{self._wait_time:.2f}"
-        )
+        # print(
+        #     f"[BowSitState] Updating: Counter {self._counter:.2f}/{self._wait_time:.2f}"
+        # )
         self._counter += constants.DELTA_TIME
         if self._counter > self._wait_time:
             # Transition back to idle after bow-sitting.
@@ -406,14 +406,15 @@ class BowSitState(c_statemachine.State):
             )
 
 
-# ---------------------------
-# Sleep State
-# ---------------------------
 class SleepState(c_statemachine.State):
     def __init__(self):
         super().__init__()
         self._sleep_time = 0
         self._counter = 0
+
+    # -------------------------------------------------------- #
+    # logic
+    # -------------------------------------------------------- #
 
     def enter(self):
         # Use the "DREAM" animation array to simulate sleep.
@@ -425,9 +426,9 @@ class SleepState(c_statemachine.State):
         print(f"[SleepState] Entered: sleeping for {self._sleep_time:.2f} seconds.")
 
     def update(self):
-        print(
-            f"[SleepState] Updating: Counter {self._counter:.2f}/{self._sleep_time:.2f}"
-        )
+        # print(
+        #     f"[SleepState] Updating: Counter {self._counter:.2f}/{self._sleep_time:.2f}"
+        # )
         self._counter += constants.DELTA_TIME
         if self._counter > self._sleep_time:
             # Transition to the sleep-to-idle transition state.
@@ -436,12 +437,13 @@ class SleepState(c_statemachine.State):
             )
 
 
-# ---------------------------
-# Dig Dirt State
-# ---------------------------
 class DigDirtState(c_statemachine.State):
     def __init__(self):
         super().__init__()
+
+    # -------------------------------------------------------- #
+    # logic
+    # -------------------------------------------------------- #
 
     def enter(self):
         # Assume an animation named "Dig_Dirt" exists for the digging action.
@@ -450,23 +452,24 @@ class DigDirtState(c_statemachine.State):
         print("[DigDirtState] Entered: starting to dig dirt.")
 
     def update(self):
-        print("[DigDirtState] Updating: checking if dig animation is finished.")
+        # print("[DigDirtState] Updating: checking if dig animation is finished.")
         # Wait until the digging animation is flagged as finished.
-        if self._statemachine.entity._c_animation._finished:
+        if self._statemachine.entity._c_animation.finished:
             # Transition to the dig-to-poop state.
             self._statemachine.entity._c_statemachine.queue_state_change(
                 random.choice(DIG_DIRT_TRANSITIONS)
             )
 
 
-# ---------------------------
-# Poop State
-# ---------------------------
 class PoopState(c_statemachine.State):
     def __init__(self):
         super().__init__()
         self._wait_time = 0
         self._counter = 0
+
+    # -------------------------------------------------------- #
+    # logic
+    # -------------------------------------------------------- #
 
     def enter(self):
         # Set an animation for pooping; we assume a "Poop" animation exists.
@@ -478,9 +481,9 @@ class PoopState(c_statemachine.State):
         print(f"[PoopState] Entered: pooping for {self._wait_time:.2f} seconds.")
 
     def update(self):
-        print(
-            f"[PoopState] Updating: Counter {self._counter:.2f}/{self._wait_time:.2f}"
-        )
+        # print(
+        #     f"[PoopState] Updating: Counter {self._counter:.2f}/{self._wait_time:.2f}"
+        # )
         self._counter += constants.DELTA_TIME
         if self._counter > self._wait_time:
             # Transition back to idle after the pooping action.
@@ -489,15 +492,16 @@ class PoopState(c_statemachine.State):
             )
 
 
-# ---------------------------
-# Sleep-to-Idle Transition State
-# ---------------------------
 class SleepToIdleTransitionState(c_statemachine.State):
     def __init__(self):
         super().__init__()
         # Define a brief transition period (e.g., 0.5 seconds)
         self._transition_time = 0.5
         self._counter = 0
+
+    # -------------------------------------------------------- #
+    # logic
+    # -------------------------------------------------------- #
 
     def enter(self):
         self._counter = 0
@@ -507,9 +511,9 @@ class SleepToIdleTransitionState(c_statemachine.State):
         )
 
     def update(self):
-        print(
-            f"[SleepToIdleTransitionState] Updating: Counter {self._counter:.2f}/{self._transition_time:.2f}"
-        )
+        # print(
+        #     f"[SleepToIdleTransitionState] Updating: Counter {self._counter:.2f}/{self._transition_time:.2f}"
+        # )
         self._counter += constants.DELTA_TIME
         if self._counter > self._transition_time:
             # After the brief delay, move to the idle state.
@@ -518,14 +522,15 @@ class SleepToIdleTransitionState(c_statemachine.State):
             )
 
 
-# ---------------------------
-# Sit-to-Idle Transition State
-# ---------------------------
 class SitToIdleTransitionState(c_statemachine.State):
     def __init__(self):
         super().__init__()
         self._transition_time = 0.5  # short pause before idle
         self._counter = 0
+
+    # -------------------------------------------------------- #
+    # logic
+    # -------------------------------------------------------- #
 
     def enter(self):
         self._counter = 0
@@ -533,9 +538,9 @@ class SitToIdleTransitionState(c_statemachine.State):
         print("[SitToIdleTransitionState] Entered: transitioning from sit to idle.")
 
     def update(self):
-        print(
-            f"[SitToIdleTransitionState] Updating: Counter {self._counter:.2f}/{self._transition_time:.2f}"
-        )
+        # print(
+        #     f"[SitToIdleTransitionState] Updating: Counter {self._counter:.2f}/{self._transition_time:.2f}"
+        # )
         self._counter += constants.DELTA_TIME
         if self._counter > self._transition_time:
             self._statemachine.entity._c_statemachine.queue_state_change(
@@ -543,14 +548,15 @@ class SitToIdleTransitionState(c_statemachine.State):
             )
 
 
-# ---------------------------
-# Idle-to-Sit Transition State
-# ---------------------------
 class IdleToSitTransitionState(c_statemachine.State):
     def __init__(self):
         super().__init__()
         self._transition_time = 0.5  # brief transition period
         self._counter = 0
+
+    # -------------------------------------------------------- #
+    # logic
+    # -------------------------------------------------------- #
 
     def enter(self):
         self._counter = 0
@@ -558,9 +564,9 @@ class IdleToSitTransitionState(c_statemachine.State):
         print("[IdleToSitTransitionState] Entered: preparing to sit from idle.")
 
     def update(self):
-        print(
-            f"[IdleToSitTransitionState] Updating: Counter {self._counter:.2f}/{self._transition_time:.2f}"
-        )
+        # print(
+        #     f"[IdleToSitTransitionState] Updating: Counter {self._counter:.2f}/{self._transition_time:.2f}"
+        # )
         self._counter += constants.DELTA_TIME
         if self._counter > self._transition_time:
             # Transition into the SitState.
@@ -569,14 +575,15 @@ class IdleToSitTransitionState(c_statemachine.State):
             )
 
 
-# ---------------------------
-# Dig-to-Poop Transition State
-# ---------------------------
 class DigToPoopTransitionState(c_statemachine.State):
     def __init__(self):
         super().__init__()
         self._transition_time = 0.5  # short delay before pooping
         self._counter = 0
+
+    # -------------------------------------------------------- #
+    # logic
+    # -------------------------------------------------------- #
 
     def enter(self):
         self._counter = 0
@@ -586,9 +593,9 @@ class DigToPoopTransitionState(c_statemachine.State):
         )
 
     def update(self):
-        print(
-            f"[DigToPoopTransitionState] Updating: Counter {self._counter:.2f}/{self._transition_time:.2f}"
-        )
+        # print(
+        #     f"[DigToPoopTransitionState] Updating: Counter {self._counter:.2f}/{self._transition_time:.2f}"
+        # )
         self._counter += constants.DELTA_TIME
         if self._counter > self._transition_time:
             self._statemachine.entity._c_statemachine.queue_state_change(
@@ -596,14 +603,15 @@ class DigToPoopTransitionState(c_statemachine.State):
             )
 
 
-# ---------------------------
-# Aggress State
-# ---------------------------
 class AggressState(c_statemachine.State):
     def __init__(self):
         super().__init__()
         self._aggress_time = 0
         self._counter = 0
+
+    # -------------------------------------------------------- #
+    # logic
+    # -------------------------------------------------------- #
 
     def enter(self):
         # Choose an aggressive animation from the AGRESS array.
@@ -616,9 +624,9 @@ class AggressState(c_statemachine.State):
         )
 
     def update(self):
-        print(
-            f"[AggressState] Updating: Counter {self._counter:.2f}/{self._aggress_time:.2f}"
-        )
+        # print(
+        #     f"[AggressState] Updating: Counter {self._counter:.2f}/{self._aggress_time:.2f}"
+        # )
         self._counter += constants.DELTA_TIME
         if self._counter > self._aggress_time:
             # Once the aggressive period ends, transition back to idle.
@@ -654,7 +662,7 @@ class Assistant(physics.entity.Entity):
             os.path.join("assets", "catanimation.json")
         )
         # constants.RUNNING = False
-        print(spritesheet, animations)
+        # print(spritesheet, animations)
 
         # -------------------------------------------------------- #
         # components
@@ -679,6 +687,7 @@ class Assistant(physics.entity.Entity):
 
         self["holding_time"] = 0
         self["holding_frame"] = None
+        self._c_statemachine.entity["target_location"] = pygame.Vector2(0)
 
         # create states
         self._c_statemachine.add_state(IDLE_STATE, IdleState())
@@ -713,22 +722,13 @@ class Assistant(physics.entity.Entity):
 
     def update(self):
         self._c_animation.xflipped = self.velocity.x < 0
-        print(self._c_animation.xflipped, self._c_animation.yflipped)
-        # super().update()
-        self._c_animation.update()
-
-        # ------------ forced
-        # make follow mouse
-        mpos = qtg.QCursor.pos()
-        self.velocity.xy = ((mpos.x(), mpos.y()) - self.position).normalize() * 100
-
-        print("mouse position: ", mpos)
+        super().update()
 
         # update entity location with app location (because shared location)
         self.position.xy = constants.WINDOW_CONTEXT._rect.topleft
         self.rect.topleft = self.position.xy
         touching = self._world.move_entity(self)
 
-        print("assistant update", *map(int, self.position))
+        # print("assistant update", *map(int, self.position))
         # abuse app location to move the window
         constants.WINDOW_CONTEXT._rect.topleft = self.position.xy
