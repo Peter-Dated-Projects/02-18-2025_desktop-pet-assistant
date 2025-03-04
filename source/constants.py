@@ -8,6 +8,8 @@ RUNTIME = 0
 
 FPS = 16
 
+RUNNING = True
+
 # ============================================================ #
 
 
@@ -26,7 +28,7 @@ ENTITY_EXIT_SIGNAL = "entity_exit"
 
 
 if sys.platform == "darwin":
-    ILLEGAL_WINDOWS = [
+    ILLEGAL_WINDOWS = {
         "Dock",
         "Control Center",
         "TextInputMenuAgent",
@@ -35,6 +37,17 @@ if sys.platform == "darwin":
         "Notification Center",
         "Dock",
         "Wallpaper",
-    ]
+    }
 elif sys.platform == "win32":
-    pass
+    ILLEGAL_WINDOWS = {
+        "explorer.exe",
+        "NVDisplay.Container.exe",
+        "explorer.exe",
+        "TextInputHost.exe",
+    }
+
+
+# ============================================================ #
+# env variables
+
+GRAVITY = 9.8
