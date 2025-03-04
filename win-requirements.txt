@@ -1,3 +1,4 @@
+pillow==11.1.0
 psutil==7.0.0
 pygame-ce==2.5.3
 PyQt5==5.15.11
