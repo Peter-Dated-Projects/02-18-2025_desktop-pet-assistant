@@ -163,24 +163,65 @@ if sys.platform == "darwin":
 
 elif sys.platform == "win32":
     import win32api
-    import win32con
-    import win32
     import win32gui
+    import win32process
+    import win32con
+
+    import psutil
 
     class MonitorRetrieval:
         MAX_DISPLAYS = 16
 
         @classmethod
         def get_all_monitors(cls):
-            monitors = []
-            for i in range(cls.MAX_DISPLAYS):
-                try:
-                    monitor_info = win32api.GetMonitorInfo(i)
-                    rect = monitor_info["Monitor"]
-                    monitors.append(
-                        MonitorInfo(i, pygame.Rect(rect[0], rect[1], rect[2], rect[3]))
-                    )
-                except:
-                    break
+            result = []
+            monitors = win32api.EnumDisplayMonitors()
+            for monitor in monitors:
+                rect = monitor[2]
+                result.append(MonitorInfo(len(result), pygame.Rect(rect)))
 
-            return monitors
+            return result
+
+    class WindowManager:
+        @classmethod
+        def get_all_windows(cls):
+            windows = []
+
+            def win_callback(hwnd, window):
+                w_number = hwnd
+                w_name = psutil.Process(
+                    win32process.GetWindowThreadProcessId(hwnd)[1]
+                ).name()
+                w_title = win32gui.GetWindowText(hwnd)
+                w_rect = win32gui.GetWindowRect(hwnd)
+                w_pid = win32process.GetWindowThreadProcessId(hwnd)[1]
+                w_zlevel = win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE)
+                w_onscreen = win32gui.IsWindowVisible(hwnd)
+
+                # currently no filters
+                if w_name in constants.ILLEGAL_WINDOWS:
+                    return
+                # if no area
+                if (
+                    w_rect[2] < constants.MINIMUM_WIDTH
+                    or w_rect[3] < constants.MINIMUM_HEIGHT
+                ):
+                    return
+                if w_zlevel < 0:
+                    return
+
+                # add to array
+                windows.append(
+                    Window(
+                        w_number,
+                        w_name,
+                        pygame.Rect(w_rect),
+                        w_title,
+                        w_pid,
+                        w_zlevel,
+                        w_onscreen,
+                    )
+                )
+
+            win32gui.EnumWindows(win_callback, windows)
+            return windows

@@ -73,9 +73,9 @@ class DesktopPetAssistant(qtw.QMainWindow):
 
     def initUI(self):
         # check if mac or not
-        if sys.platform != "darwin":
-            print("Mac version not running on a mac? (or linux)")
-            sys.exit()
+        # if sys.platform != "darwin":
+        #     print("Mac version not running on a mac? (or linux)")
+        #     sys.exit()
 
         # create a pyqt5 app that fills the entire visible screen with a transparent background
         screen_size = self._world._visible_world_rect
