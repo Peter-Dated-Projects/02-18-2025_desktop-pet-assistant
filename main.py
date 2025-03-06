@@ -1,11 +1,10 @@
-import PyQt5
 import PyQt5.QtWidgets as qtw
 import PyQt5.QtGui as qtg
 import PyQt5.QtCore as qtc
-import os
 import sys
 import time
 import pygame
+import os
 
 from source import constants
 
@@ -14,10 +13,11 @@ from source import constants
 # ======================================================== #
 
 from source import world
-from source import screen
 from source import signal
 
 from game import assistant
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 class DesktopPetAssistant(qtw.QMainWindow):
