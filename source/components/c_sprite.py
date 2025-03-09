@@ -38,7 +38,7 @@ class SpriteComponent(c_component.Component):
 
     def update(self, entity):
         # draw the pixmap onto the screen
-        constants.WINDOW_CONTEXT._fb_painter.drawPixmap(
+        self.entity._fb_painter.drawPixmap(
             entity.position.x, entity.position.y, self._qpixmap
         )
 

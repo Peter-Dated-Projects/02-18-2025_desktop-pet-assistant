@@ -1,22 +1,25 @@
 import pygame
-import math
 import random
 import types
 
 import os
-import PyQt5.QtGui as qtg
+import PyQt5.QtCore as qtc
 from PyQt5.QtGui import QTransform
 
+from source import screen
+from source import graphics
 from source import constants
 from source import physics
-from source import graphics
-from source import screen
+
+from source import multiqtwindow
 
 from source.components import c_animation
 from source.components import c_statemachine
 
 
 # ============================================================ #
+
+WINDOW_AREA = (100, 100)
 
 SIT = ["Sit_1", "Sit_2"]
 IDLE = ["Idle_1", "Idle_2"]
@@ -126,11 +129,14 @@ class IdleState(c_statemachine.State):
         pass
 
     def update(self):
-        # print(
-        #     f"CURRENT: IDLE -- {self._wait_time:5.2f} | Counter: {self._counter:5.2f}"
-        # )
+        print(constants.DELTA_TIME)
         self._counter += constants.DELTA_TIME
+        print(
+            f"CURRENT: IDLE -- {self._wait_time:5.2f} | Counter: {self._counter:5.2f} | should transition: {self._counter > self._wait_time}"
+        )
+
         if self._counter > self._wait_time:
+            print("transitionng")
             self._statemachine.entity._c_statemachine.queue_state_change(
                 random.choice(IDLE_TRANSITIONS)
             )
@@ -624,13 +630,15 @@ class AggressState(c_statemachine.State):
         )
 
     def update(self):
-        # print(
-        #     f"[AggressState] Updating: Counter {self._counter:.2f}/{self._aggress_time:.2f}"
-        # )
+        print(
+            f"[AggressState] Updating: Counter {self._counter:.2f}/{self._aggress_time:.2f}"
+        )
         self._counter += constants.DELTA_TIME
+        print("counter:", self._counter)
         if self._counter > self._aggress_time:
+            print("transitioning")
             # Once the aggressive period ends, transition back to idle.
-            self._statemachine.entity._c_statemachine.queue_state_change(IDLE_STATE)
+            self._statemachine.queue_state_change(IDLE_STATE)
 
 
 # ============================================================ #
@@ -649,20 +657,21 @@ def _c_anim_update(self):
         sprite = sprite.transformed(QTransform().scale(1, -1))
 
     # render current frame
-    constants.WINDOW_CONTEXT._fb_painter.drawPixmap(0, 0, sprite)
+    self.entity._fb_painter.drawPixmap(0, 0, sprite)
 
 
-class Assistant(physics.entity.Entity):
+class Assistant(multiqtwindow.WindowWrapper):
 
-    def __init__(self):
-        super().__init__(0, 0, constants.WINDOW_SIZE[0], constants.WINDOW_SIZE[1])
+    def __init__(self, name: str = "stella.ai"):
+        super().__init__(
+            name,
+            pygame.Rect(0, 0, WINDOW_AREA[0], WINDOW_AREA[1]),
+        )
 
         # load animation
         spritesheet, animations = graphics.load_animations(
             os.path.join("assets", "catanimation.json")
         )
-        # constants.RUNNING = False
-        # print(spritesheet, animations)
 
         # -------------------------------------------------------- #
         # components
@@ -674,9 +683,7 @@ class Assistant(physics.entity.Entity):
             c_statemachine.StateMachineComponent()
         )
 
-        # -------------------------------------------------------- #
         # configure components
-
         # scale all of animation frame sizes to 100x100
         for animation in animations.values():
             for sprite in animation._sprite_frames:
@@ -716,19 +723,39 @@ class Assistant(physics.entity.Entity):
         )
         self._c_statemachine.add_state(AGGRESS_STATE, AggressState())
 
+        # -------------------------------------------------------- #
+        # pyqt options
+
     # -------------------------------------------------------- #
     # logic
     # -------------------------------------------------------- #
 
-    def update(self):
+    def widget_update(self):
         self._c_animation.xflipped = self.velocity.x < 0
-        super().update()
+        super().widget_update()
 
         # update entity location with app location (because shared location)
-        self.position.xy = constants.WINDOW_CONTEXT._rect.topleft
-        self.rect.topleft = self.position.xy
         touching = self._world.move_entity(self)
+        print(self.position, self.velocity, self._c_statemachine._current_state)
 
         # print("assistant update", *map(int, self.position))
         # abuse app location to move the window
-        constants.WINDOW_CONTEXT._rect.topleft = self.position.xy
+        self._window_rect.topleft = self.position.xy
+        self._fb_rect.setWidth(self._window_rect.width)
+        self._fb_rect.setHeight(self._window_rect.height)
+
+    # -------------------------------------------------------- #
+    # pyqt logic
+    # -------------------------------------------------------- #
+
+    def mousePressEvent(self, event):
+        if event.button() == qtc.Qt.LeftButton:
+            self.drag_position = event.globalPos() - self.frameGeometry().topLeft()
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == qtc.Qt.LeftButton:
+            new_pos = event.globalPos() - self.drag_position
+            self.position.xy = (new_pos.x(), new_pos.y())
+            self.move(new_pos)
+            event.accept()

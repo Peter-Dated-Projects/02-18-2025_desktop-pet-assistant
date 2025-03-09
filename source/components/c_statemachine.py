@@ -31,9 +31,9 @@ class State:
 
 class StateMachineComponent(c_component.Component):
 
-    def __init__(self, initial_state: str = None, states: dict[str, State] = {}):
+    def __init__(self, initial_state: str = None, states: dict[str, State] = None):
         super().__init__()
-        self._states = states
+        self._states = states if states else {}
         self._current_state = initial_state
 
         self._next_state: str = None
@@ -44,7 +44,9 @@ class StateMachineComponent(c_component.Component):
     # -------------------------------------------------------- #
 
     def update(self):
+        # auto selects a current state
         if not self._current_state:
+            # check if state has been queued
             if self._next_state:
                 self._prev_state = self._current_state
                 self._current_state = self._next_state
@@ -55,7 +57,13 @@ class StateMachineComponent(c_component.Component):
         # update state machine
         self._states[self._current_state].update()
 
-        # check if next state required
+        # Debug output to check state change
+        print(self, self.entity)
+        print(f"Current state: {self._current_state}")
+        print(f"Next state: {self._next_state}")
+        print(f"Previous state: {self._prev_state}")
+
+        # check if next state queued
         if self._next_state is not None:
             self._states[self._current_state].exit()
             self._prev_state = self._current_state
@@ -64,6 +72,7 @@ class StateMachineComponent(c_component.Component):
             self._next_state = None
 
     def queue_state_change(self, state: str):
+        print("queueing change:", state, self, self.entity)
         self._next_state = state
 
     def add_state(self, statename: str, state: State):

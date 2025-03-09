@@ -1,16 +1,12 @@
 import pygame
-from PyQt5.QtWidgets import QWidget
-
-from source import constants
 
 # ======================================================== #
 # Entity Class
 # ======================================================== #
 
 
-class Entity(QWidget):
+class Entity:
     def __init__(self, x, y, width, height):
-        super().__init__()
         self.position = pygame.math.Vector2(x, y)
         self.velocity = pygame.math.Vector2(0, 0)
         self.rect = pygame.FRect(x, y, width, height)
@@ -30,13 +26,11 @@ class Entity(QWidget):
         self.components.append(component)
         component.entity = self
         component.__post_init__()
-
         return component
 
-    def update(self):
+    def update_entity(self):
         for component in self.components:
             component.update()
-            # print("updating comp", component)
 
     # -------------------------------------------------------- #
     # special functions

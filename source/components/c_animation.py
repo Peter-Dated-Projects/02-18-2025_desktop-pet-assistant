@@ -32,7 +32,7 @@ class AnimationComponent(c_component.Component):
         if self._y_flip:
             sprite = sprite.transformed(QTransform().scale(1, -1))
 
-        constants.WINDOW_CONTEXT._fb_painter.drawPixmap(
+        self.entity._fb_painter.drawPixmap(
             int(self.entity.position.x), int(self.entity.position.y), sprite
         )
 

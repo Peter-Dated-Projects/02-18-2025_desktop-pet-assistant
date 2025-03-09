@@ -78,7 +78,7 @@ class World:
         # -------------------------------------------------------- #
         changes = []
         for entity in self._entites.values():
-            entity.update()
+            entity.window_update()
             if entity.dead:
                 changes.append(entity)
         for c in changes:
@@ -88,7 +88,7 @@ class World:
         touching = {"left": False, "right": False, "top": False, "bottom": False}
 
         # forces
-        entity.velocity.y += constants.GRAVITY * constants.DELTA_TIME
+        # entity.velocity.y += constants.GRAVITY * constants.DELTA_TIME
         entity.position.xy += entity.velocity.xy * constants.DELTA_TIME
 
         # check if entity exits visible windows
@@ -102,6 +102,7 @@ class World:
                     break
 
             if not closest_monitor:
+                # should just teleport entity back into screen
                 print("ENTITY EXITED SCREEN")
             else:
                 self._entity_exit_signal.emit(entity)

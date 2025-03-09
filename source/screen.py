@@ -14,7 +14,7 @@ class Window:
         self,
         window_id: int,
         name: str,
-        rect: pygame.Rect,
+        rect: pygame.FRect,
         title: str,
         pid: int,
         zlevel: int,
@@ -22,7 +22,7 @@ class Window:
     ):
         self._window_id = window_id
         self._name = name
-        self._rect = rect
+        self._rect = pygame.FRect(rect) if type(rect) is pygame.Rect else rect
         self._title = title
         self._pid = pid
         self._zlevel = zlevel
