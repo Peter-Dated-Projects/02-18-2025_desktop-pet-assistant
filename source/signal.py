@@ -78,7 +78,7 @@ class Signal:
     def handle_packet(self, *args):
         for key, receiver in self._receivers.items():
             print(
-                f"{constants.RUN_TIME:.5f} | EMITTING",
+                f"{constants.RUNTIME:.5f} | EMITTING",
                 self._signal_name,
                 receiver._function,
             )
@@ -101,6 +101,8 @@ class SignalReceiver:
     # logic
 
     def emit_signal(self, *args):
+        if len(args) != len(self._handler._args_template):
+            raise Exception("Invalid number of arguments")
         # check if args are valid
         for i in range(len(self._handler._args_template)):
             if not isinstance(args[i], self._handler._args_template[i]):
