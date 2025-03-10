@@ -1,5 +1,5 @@
 import uuid
-from typing import Callable
+from typing import Callable, List
 
 from . import constants
 
@@ -16,7 +16,7 @@ class SignalHandler:
     # ------------------------------------------------------------------------ #
     # logic
 
-    def register_signal(self, signal_name: str, args_template: list[type]):
+    def register_signal(self, signal_name: str, args_template: List[type]):
         self._signals[signal_name] = Signal(signal_name, args_template)
         self._signals[signal_name]._handler = self
         return self._signals[signal_name]
@@ -55,7 +55,7 @@ class SignalHandler:
 
 
 class Signal:
-    def __init__(self, signal_name: str, args_template: list[type]):
+    def __init__(self, signal_name: str, args_template: List[type]):
         self._handler = None
         self._receivers = {}
 
@@ -114,7 +114,7 @@ class SignalReceiver:
 
 
 class SignalPacket:
-    def __init__(self, signal_name: str, args: list[any]):
+    def __init__(self, signal_name: str, args: List[any]):
         self._signal_name = signal_name
         self.args = args
 

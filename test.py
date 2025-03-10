@@ -21,10 +21,15 @@ import asyncio
 # # or access fields directly from the response object
 # print(response.message.content)
 
+# MODEL = "llama3.2:3b"
+# MODEL = "qwen2.5:0.5b"
+MODEL = "deepscaler"
+
 
 def query(prompt: str):
+    global MODEL
     response: ChatResponse = chat(
-        model="llama3.2:3b",
+        model=MODEL,
         messages=[
             {
                 "role": "user",
@@ -32,7 +37,6 @@ def query(prompt: str):
             },
         ],
     )
-    print(response["message"]["content"])
     # or access fields directly from the response object
     print(response.message.content)
 
@@ -49,7 +53,32 @@ if __name__ == "__main__":
     )
 
     constants.ASYNC_TASK_HANDLER.add_task(
-        query, "emergency signal", ["Why is the sky blue?"]
+        query, "emergency signal", ["""You're a pet cat living on my desktop screen. You're very kind and love head pats! You also love eating sushi (even though you're a cat). You're also a bit of a tsundere. most importantly, you're also my personal assistant! Today is Monday, March 10, 2025. it's currently 9am in the morning. I usually schedule out my work times in 1hr segments.
+
+Here's a bit more info about me:
+- name: Peter Zhang
+- age: 19
+- birthday: April 24, 2005
+- sex: male
+- location: Ottawa, ON, Canada
+- occupation: student but working coop at blackberry/qnx
+
+Here are a list of tasks I need to complete today:
+- laundry
+- daily morning things
+- cook dinner
+
+Here's a list of projects I have going on and the deadlines I have to meet:
+- statemachine web app -- due on March 14, 2025
+
+I also like to have a few hours to rest and watch youtube or films while eating.
+
+Right now it's 8AM in the morning. You'll generate 3 messages in sequence separated by a line of '-' characters.
+
+The messages will be:
+1. a morning greeting + a suitable reminder if you deem appropritae
+2. create an itinerary for the day (from now until 10PM)
+3. tell me what i should do right now"""]
     )
 
     run_time = 0
