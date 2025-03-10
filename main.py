@@ -9,9 +9,11 @@ import os
 from source import constants
 from source import physics
 
-# ======================================================== #
+from source.components import c_async
+
+# -------------------------------------------------------- #
 # Desktop Pet Assistant
-# ======================================================== #
+# -------------------------------------------------------- #
 
 from source import world
 from source import signal
@@ -30,6 +32,7 @@ class DesktopPetAssistantApplication:
     def __init__(self):
         constants.APP_CONTEXT = self
         constants.SIGNAL_HANDLER = signal.SignalHandler()
+        constants.ASYNC_TASK_HANDLER = c_async.AsyncOperationsHandler()
 
         self.app = qtw.QApplication(sys.argv)
         self.app.setQuitOnLastWindowClosed(True)

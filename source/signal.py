@@ -1,4 +1,5 @@
 import uuid
+from typing import Callable
 
 from . import constants
 
@@ -20,7 +21,7 @@ class SignalHandler:
         self._signals[signal_name]._handler = self
         return self._signals[signal_name]
 
-    def register_receiver(self, signal_name: str, function: "function"):
+    def register_receiver(self, signal_name: str, function: Callable):
         return self._signals[signal_name].register_receiver(function)
 
     def emit_signal(self, signal_name: str, *args):
@@ -63,8 +64,7 @@ class Signal:
 
     # ------------------------------------------------------------------------ #
     # logic
-
-    def register_receiver(self, function: "function"):
+    def register_receiver(self, function: Callable):
         receiver = SignalReceiver(function)
         receiver._handler = self
         self._receivers[receiver._id] = receiver
@@ -91,7 +91,7 @@ class Signal:
 
 
 class SignalReceiver:
-    def __init__(self, function: "function"):
+    def __init__(self, function: Callable):
         self._handler = None
 
         self._function = function
@@ -103,7 +103,7 @@ class SignalReceiver:
     def emit_signal(self, *args):
         # check if args are valid
         for i in range(len(self._handler._args_template)):
-            if type(args[i]) != self._handler._args_template[i]:
+            if not isinstance(args[i], self._handler._args_template[i]):
                 raise Exception("Invalid argument type")
         self._function(*args)
 
