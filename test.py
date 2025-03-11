@@ -39,6 +39,7 @@ def query(prompt: str):
     )
     # or access fields directly from the response object
     print(response.message.content)
+    return response
 
 
 if __name__ == "__main__":
@@ -97,7 +98,7 @@ if __name__ == "__main__":
         print(future.result())
 
     constants.ASYNC_TASK_HANDLER.add_task_with_callback(
-        lambda: print("hello world"), "test signal", temp_func
+        query, "test signal", temp_func, "why is the sky blue"
     )
 
     run_time = 0
