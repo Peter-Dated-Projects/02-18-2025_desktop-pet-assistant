@@ -38,11 +38,12 @@ def query(prompt: str):
         ],
     )
     # or access fields directly from the response object
-    print(response.message.content)
+    # print(response.message.content)
     return response
 
 
 if __name__ == "__main__":
+
     constants.SIGNAL_HANDLER = signal.SignalHandler()
     constants.ASYNC_TASK_HANDLER = c_async.AsyncOperationsHandler()
 
@@ -91,14 +92,18 @@ if __name__ == "__main__":
     #         ],
     #     )
 
-    constants.ASYNC_TASK_HANDLER.add_task(lambda: print("hello world"), "test signal")
+    # constants.ASYNC_TASK_HANDLER.add_task(lambda: print("hello world"), "test signal")
 
-    def temp_func(future, signal_object):
-        print("callback")
+    def temp_func(future, signal_object, *args):
         print(future.result())
 
     constants.ASYNC_TASK_HANDLER.add_task_with_callback(
-        query, "test signal", temp_func, "why is the sky blue"
+        query,
+        "test signal",
+        user_callback=temp_func,
+        args=[
+            "just print out the english alphabet with no spaces and all caps and only that. no other information.",
+        ],
     )
 
     run_time = 0

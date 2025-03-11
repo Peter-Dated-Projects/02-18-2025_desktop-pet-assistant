@@ -30,7 +30,11 @@ class AsyncOperationsHandler:
         signal_object.emit(*_args)
 
     def add_task_with_callback(
-        self, task: Callable, signal_name: str, user_callback: Callable = None, *args
+        self,
+        task: Callable,
+        signal_name: str,
+        user_callback: Callable = None,
+        args: list = None,
     ):
         _args = args if args else []
         _callback = user_callback if user_callback else self.finished_task_signal
