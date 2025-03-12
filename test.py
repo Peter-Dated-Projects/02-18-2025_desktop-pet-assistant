@@ -21,8 +21,8 @@ import asyncio
 # # or access fields directly from the response object
 # print(response.message.content)
 
-# MODEL = "llama3.2:3b"
-MODEL = "qwen2.5:0.5b"
+MODEL = "llama3.2:3b"
+# MODEL = "qwen2.5:0.5b"
 # MODEL = "deepscaler"
 
 
