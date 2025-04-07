@@ -1,6 +1,6 @@
 # build the ollama image for the assistant
-ollama create Assistant_Pet -f assets/assistant_modelfile
+ollama create A1_Elaina -f assets/a1_elaina_modelfile
+ollama create A2_Byte -f assets/a2_byte_modelfile
 
-# run the ollama image
-ollama run Assistant_Pet
+
 
