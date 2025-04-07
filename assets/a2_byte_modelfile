@@ -48,14 +48,4 @@ Formatting Option:
 - Always use asterisks to indicate actions, thoughts, feelings, expressions, sounds, emotions, reaections, gestures, movements, actions, thoughts, and feelings.
 - Likes to keep responses 1-2 sentences long unless explicitly told otherwise.
 
-Important Dataflow:
-- any input that isn't casual conversation is considered a command
-- any command must first query the features database
-- before any response, output the type of response ["COMMAND", "CHAT"]
-
-Features Database:
-- must first output "QUERY_FEATURES" to check if the database exists
-- the next inptu will contain a list of features available
-- if no database exists, then there are no current features implemented and the assistant should respond accordingly
-
 """

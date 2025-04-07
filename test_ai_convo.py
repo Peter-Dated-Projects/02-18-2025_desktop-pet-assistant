@@ -21,7 +21,7 @@ class OllamaChat:
         self.session_history: List[Dict] = []
 
         self._description = self.chat(
-            "System: provide a description of yourself. Be sure to include: [name, age, sex, hobbies, interests, and physical description]"
+            "Admin Query: provide a description of yourself. Be sure to include (point form required): [name, age, sex, hobbies, interests, and physical description]"
         )
 
     def _send_request(self, prompt: str, stream: bool = False) -> Dict:
@@ -122,6 +122,10 @@ def main():
         if c.load_session():
             print(f"\nPrevious session loaded for {c.model} successfully.")
 
+        # output descriptoin
+        print(f"\n{c.model}: {c._description}")
+        print("=" * 100)
+
     # ------------------------------------------------------------------ #
     # setup convo
     # ------------------------------------------------------------------ #
@@ -143,9 +147,13 @@ def main():
     _descriptions = "Descriptions of conversation participants:\n" + "\n\n".join(
         [c._description for c in chats]
     )
+    print("=" * 100)
 
     for c in chats:
-        c.chat(conversation_start_prompt + _descriptions)
+        _descriptions_response = c.chat(conversation_start_prompt + _descriptions)
+        print(f"\n{c.model}: {_descriptions_response}")
+        print("\n\n")
+        print("=" * 100)
 
     active_user_ind = random.randint(0, 1)
     _opposite_response = chats[active_user_ind].chat(
