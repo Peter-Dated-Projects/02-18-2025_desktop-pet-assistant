@@ -58,10 +58,10 @@ class StateMachineComponent(c_component.Component):
         self._states[self._current_state].update()
 
         # Debug output to check state change
-        print(self, self.entity)
-        print(f"Current state: {self._current_state}")
-        print(f"Next state: {self._next_state}")
-        print(f"Previous state: {self._prev_state}")
+        # print(self, self.entity)
+        # print(f"Current state: {self._current_state}")
+        # print(f"Next state: {self._next_state}")
+        # print(f"Previous state: {self._prev_state}")
 
         # check if next state queued
         if self._next_state is not None:

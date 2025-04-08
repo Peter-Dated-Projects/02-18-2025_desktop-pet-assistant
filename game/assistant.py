@@ -10,11 +10,14 @@ from source import screen
 from source import graphics
 from source import constants
 from source import physics
+from source import signal
 
 from source import multiqtwindow
 
 from source.components import c_animation
 from source.components import c_statemachine
+
+from game.components import c_wake_word
 
 
 # ============================================================ #
@@ -129,11 +132,7 @@ class IdleState(c_statemachine.State):
         pass
 
     def update(self):
-        print(constants.DELTA_TIME)
         self._counter += constants.DELTA_TIME
-        print(
-            f"CURRENT: IDLE -- {self._wait_time:5.2f} | Counter: {self._counter:5.2f} | should transition: {self._counter > self._wait_time}"
-        )
 
         if self._counter > self._wait_time:
             print("transitionng")
@@ -630,11 +629,11 @@ class AggressState(c_statemachine.State):
         )
 
     def update(self):
-        print(
-            f"[AggressState] Updating: Counter {self._counter:.2f}/{self._aggress_time:.2f}"
-        )
+        # print(
+        #     f"[AggressState] Updating: Counter {self._counter:.2f}/{self._aggress_time:.2f}"
+        # )
         self._counter += constants.DELTA_TIME
-        print("counter:", self._counter)
+        # print("counter:", self._counter)
         if self._counter > self._aggress_time:
             print("transitioning")
             # Once the aggressive period ends, transition back to idle.
@@ -675,6 +674,7 @@ class Assistant(multiqtwindow.WindowWrapper):
 
         # -------------------------------------------------------- #
         # components
+        # -------------------------------------------------------- #
 
         self._c_animation = self.add_component(
             c_animation.AnimationComponent(animations["Idle_1"])
@@ -682,6 +682,15 @@ class Assistant(multiqtwindow.WindowWrapper):
         self._c_statemachine = self.add_component(
             c_statemachine.StateMachineComponent()
         )
+        self._c_wake_word = self.add_component(
+            c_wake_word.WakeWordComponent(
+                ["assets/picovoice_elaina_trained.ppn"],
+                [],
+                "voice_activated",
+            ),
+        )
+
+        self._c_wake_word.start()
 
         # configure components
         # scale all of animation frame sizes to 100x100
@@ -724,7 +733,12 @@ class Assistant(multiqtwindow.WindowWrapper):
         self._c_statemachine.add_state(AGGRESS_STATE, AggressState())
 
         # -------------------------------------------------------- #
-        # pyqt options
+        # events handler
+        # --------------------------------------------------------- #
+
+        self._state_changed_event = constants.SIGNAL_HANDLER.get_signal(
+            "voice_activated"
+        )
 
     # -------------------------------------------------------- #
     # logic
@@ -736,7 +750,7 @@ class Assistant(multiqtwindow.WindowWrapper):
 
         # update entity location with app location (because shared location)
         touching = self._world.move_entity(self)
-        print(self.position, self.velocity, self._c_statemachine._current_state)
+        # print(self.position, self.velocity, self._c_statemachine._current_state)
 
         # print("assistant update", *map(int, self.position))
         # abuse app location to move the window

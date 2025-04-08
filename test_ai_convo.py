@@ -6,6 +6,9 @@ import random
 from typing import List, Dict
 
 
+import ollama
+
+
 class OllamaChat:
     def __init__(self, model: str = "llama2", base_url: str = "http://localhost:11434"):
         """
@@ -20,21 +23,23 @@ class OllamaChat:
         self.context = []
         self.session_history: List[Dict] = []
 
+        self._client = ollama.Client(model=model, base_url=base_url)
         self._description = self.chat(
             "Admin Query: provide a description of yourself. Be sure to include (point form required): [name, age, sex, hobbies, interests, and physical description]"
         )
 
     def _send_request(self, prompt: str, stream: bool = False) -> Dict:
         """
-        Send a request to the Ollama API
-
+        Send a request to the Ollama API and return the response
         Args:
             prompt: The user's input message
-            stream: Whether to stream the response
-
+            stream: Whether to stream the response (default: False)
         Returns:
-            The API response as a dictionary
+            The response from the Ollama API
+        Raises:
+            requests.exceptions.RequestException: If the request fails
         """
+
         url = f"{self.base_url}/api/chat"
         headers = {"Content-Type": "application/json"}
 

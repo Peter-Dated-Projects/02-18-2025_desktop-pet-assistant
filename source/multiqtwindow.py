@@ -60,7 +60,7 @@ class WindowWrapper(physics.entity.Entity, qtw.QWidget):
     def widget_update(self):
         physics.entity.Entity.update_entity(self)
 
-        print(self.geometry())
+        # print(self.geometry())
 
     def window_update(self):
         # create framebuffer painter

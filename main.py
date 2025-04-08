@@ -5,9 +5,11 @@ import sys
 import time
 import pygame
 import os
+import dotenv
 
 from source import constants
 from source import physics
+from source import signal
 
 from source.components import c_async
 
@@ -21,6 +23,9 @@ from source import signal
 from game import assistant
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+# load env
+dotenv.load_dotenv()
 
 
 # -------------------------------------------------------- #
@@ -56,6 +61,17 @@ class DesktopPetAssistantApplication:
         print(f"Screen: {screen_size[2]}x{screen_size[3]}")
         print(f"Screen topleft: {self._world._visible_world_rect.topleft}")
 
+        # -------------------------------------------------------- #
+        # events setup
+        # -------------------------------------------------------- #
+
+        constants.SIGNAL_HANDLER.register_signal("voice_activated", [str])
+
+        constants.SIGNAL_HANDLER.register_receiver(
+            "voice_activated",
+            lambda x: print(f"voice_activated: {x}"),
+        )
+
     # -------------------------------------------------------- #
     # logic
     # -------------------------------------------------------- #
@@ -75,10 +91,11 @@ class DesktopPetAssistantApplication:
         constants.END_TIME = constants.START_TIME
         constants.RUNTIME += constants.DELTA_TIME
 
+        # update systems
+        constants.SIGNAL_HANDLER.handle()
+
         # update world
         self._world.update()
-
-        print("\n")
 
     def run(self):
         sys.exit(self.app.exec_())
@@ -92,7 +109,7 @@ if __name__ == "__main__":
     application = DesktopPetAssistantApplication()
 
     # add entities
-    application._world.add_entity(assistant.Assistant("test"))
+    # application._world.add_entity(assistant.Assistant("test"))
     application._world.add_entity(assistant.Assistant("stella.ai"))
 
     application.run()

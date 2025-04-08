@@ -18,3 +18,5 @@ dist
 *.exe
 
 **/.DS_Store
+chats/A1_Elaina.json
+chats/A2_Byte.json
