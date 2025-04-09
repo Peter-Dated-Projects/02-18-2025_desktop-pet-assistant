@@ -23,7 +23,7 @@ class OllamaChat:
         self.context = []
         self.session_history: List[Dict] = []
 
-        self._client = ollama.Client(model=model, base_url=base_url)
+        self._client = ollama.Client(host=base_url)
         self._description = self.chat(
             "Admin Query: provide a description of yourself. Be sure to include (point form required): [name, age, sex, hobbies, interests, and physical description]"
         )
@@ -120,7 +120,7 @@ def main():
     print("Ollama Chat Client - Type 'exit' to quit or 'save' to save session")
 
     # Initialize chat
-    chats = [OllamaChat(model="A1_Elaina"), OllamaChat(model="A2_Byte")]
+    chats = [OllamaChat(model="a_Celia"), OllamaChat(model="a_Elaina")]
 
     # Try to load previous session
     for c in chats:

@@ -8,6 +8,7 @@ from source import constants
 from source import multiqtwindow
 
 from game.components import c_wake_word
+from game.components import c_ollamaapi
 
 # ============================================================ #
 # Prompt class
@@ -45,6 +46,9 @@ class Prompt(multiqtwindow.WindowWrapper):
                 "voice_activated",
                 weights=[0.6, 0.4],
             ),
+        )
+        self._c_ollama = self.add_component(
+            c_ollamaapi.OllamaAPIComponent(model="a_Celia"),
         )
         self._c_wake_word.start()
 
@@ -95,7 +99,11 @@ class Prompt(multiqtwindow.WindowWrapper):
             # get input text
             self._input_text = self._input.text()
             self._is_prompting = False
-            print(self._input_text)
+
+            # request from ollama
+            print(f"Input text: {self._input_text}")
+            self._c_ollama.query_ollama(self._input_text)
+
             # clear input text
             self._input.clear()
             # hide prompt
@@ -114,6 +122,9 @@ class Prompt(multiqtwindow.WindowWrapper):
         if self._input.text() == "":
             self._is_prompting = False
             self.hide()
+
+            # create an ollama request
+
         else:
             # set focus to input
             self._input.setFocus(qtc.Qt.FocusReason.ActiveWindowFocusReason)

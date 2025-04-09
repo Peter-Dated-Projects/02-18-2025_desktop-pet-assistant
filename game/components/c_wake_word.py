@@ -100,12 +100,12 @@ class WakeWordComponent(c_thread.ThreadComponent):
                     args=[self._pause_time],
                 )
 
-    def _async_callback(self, future, signal_object, *args):
+    def _async_callback(self, future, signal_object, _args):
         """
         This callback means the wake word was detected and designated pause time has
         passed. It will stop the wake word detection and restart it.
         """
 
-        print(future, signal_object, args)
+        # print(future, signal_object, _args)
         print("Starting audio detection again")
         self._paused = False

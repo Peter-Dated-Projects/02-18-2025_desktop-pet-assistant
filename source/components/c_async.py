@@ -23,10 +23,10 @@ class AsyncOperationsHandler:
     # -------------------------------------------------------- #
 
     @staticmethod
-    def finished_task_signal(future, signal_object, *args):
+    def finished_task_signal(future, signal_object, _args):
         # Simple version that just emits the result.
         _args = [future.result()] if future.result() else []
-        print("submitting args", _args)
+        print("submitting args", _args, "\nInputted args", _args)
         signal_object.emit(*_args)
 
     def add_task_with_callback(
@@ -44,7 +44,9 @@ class AsyncOperationsHandler:
         future = self._thread_pool.submit(task, *_args)
 
         # Attach the done callback to the future, binding the extra parameters.
-        future.add_done_callback(partial(_callback, signal_object=signal_object))
+        future.add_done_callback(
+            partial(_callback, signal_object=signal_object, _args=_args)
+        )
 
     # Optionally, you can still support the original add_task method:
     def add_task(self, task: Callable, signal_name: str, *args):

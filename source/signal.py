@@ -1,5 +1,5 @@
 import uuid
-from typing import Callable, List
+from typing import Callable, List, Any
 
 from . import constants
 
@@ -108,7 +108,9 @@ class SignalReceiver:
             raise Exception("Invalid number of arguments")
         # check if args are valid
         for i in range(len(self._handler._args_template)):
-            if not isinstance(args[i], self._handler._args_template[i]):
+            if (self._handler._args_template[i] is not Any) and (
+                not isinstance(args[i], self._handler._args_template[i])
+            ):
                 raise Exception("Invalid argument type")
         self._function(*args)
 
@@ -119,7 +121,8 @@ class SignalReceiver:
 
 
 class SignalPacket:
-    def __init__(self, signal_name: str, args: List[any]):
+
+    def __init__(self, signal_name: str, args: List[Any]):
         self._signal_name = signal_name
         self.args = args
 
