@@ -20,7 +20,8 @@ from source.components import c_async
 from source import world
 from source import signal
 
-from game import assistant
+from game.windows import assistant
+from game.windows import prompt
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -67,15 +68,6 @@ class DesktopPetAssistantApplication:
 
         constants.SIGNAL_HANDLER.register_signal("voice_activated", [str])
 
-        constants.SIGNAL_HANDLER.register_receiver(
-            "voice_activated",
-            lambda x: print(f"voice_activated: {x}"),
-        )
-
-    # -------------------------------------------------------- #
-    # logic
-    # -------------------------------------------------------- #
-
     # -------------------------------------------------------- #
     # pyqt logic
     # -------------------------------------------------------- #
@@ -111,5 +103,6 @@ if __name__ == "__main__":
     # add entities
     # application._world.add_entity(assistant.Assistant("test"))
     application._world.add_entity(assistant.Assistant("stella.ai"))
+    application._world.add_entity(prompt.Prompt("prompt_window"))
 
     application.run()

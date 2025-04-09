@@ -18,10 +18,13 @@ class WindowWrapper(physics.entity.Entity, qtw.QWidget):
         qtw.QWidget.__init__(self)
         self._name = name
 
+        # layout
+        self._layout = qtw.QVBoxLayout()
+
         # create a framebuffer object
         t_image = qtg.QImage(
-            constants.WINDOW_SIZE[0],
-            constants.WINDOW_SIZE[1],
+            area.width,
+            area.height,
             qtg.QImage.Format_ARGB32_Premultiplied,
         )
         t_image.fill(qtg.QColor(0, 0, 0, 0))
@@ -29,29 +32,19 @@ class WindowWrapper(physics.entity.Entity, qtw.QWidget):
 
         # create a painter for framebuffer
         self._fb_painter = qtg.QPainter(self._framebuffer)
-        self._fb_painter.setCompositionMode(qtg.QPainter.CompositionMode_SourceOver)
-        self._fb_painter.setRenderHint(qtg.QPainter.Antialiasing, False)
-        self._fb_painter.end()
 
         # create rect for movement
-        self._window_rect = pygame.Rect(
-            0, 0, constants.WINDOW_SIZE[0], constants.WINDOW_SIZE[1]
-        )
-        self._fb_rect = qtc.QRectF(
-            0, 0, constants.WINDOW_SIZE[0], constants.WINDOW_SIZE[1]
-        )
+        self._window_rect = pygame.Rect(0, 0, area.width, area.height)
+        self._fb_rect = qtc.QRectF(0, 0, area.width, area.height)
         self.initUI()
 
         # show self
         self.show()
 
     def initUI(self):
-        self.setGeometry(0, 0, constants.WINDOW_SIZE[0], constants.WINDOW_SIZE[1])
+        self.setGeometry(0, 0, self._window_rect.width, self._window_rect.height)
         self.setWindowTitle(self._name)
-        self.setWindowFlags(qtc.Qt.FramelessWindowHint)
-        self.setAttribute(qtc.Qt.WA_TranslucentBackground)
-        self.setStyleSheet("background-color: rgba(0, 0, 0, 0);")
-        self.setWindowFlags(self.windowFlags() | qtc.Qt.WindowStaysOnTopHint)
+        self.setLayout(self._layout)
 
     # -------------------------------------------------------- #
     # logic

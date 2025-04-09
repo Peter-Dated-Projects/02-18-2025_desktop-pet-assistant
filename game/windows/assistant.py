@@ -13,11 +13,12 @@ from source import physics
 from source import signal
 
 from source import multiqtwindow
-
 from source.components import c_animation
 from source.components import c_statemachine
 
 from game.components import c_wake_word
+
+from game.windows import transparentwindow
 
 
 # ============================================================ #
@@ -135,7 +136,7 @@ class IdleState(c_statemachine.State):
         self._counter += constants.DELTA_TIME
 
         if self._counter > self._wait_time:
-            print("transitionng")
+            # print("transitionng")
             self._statemachine.entity._c_statemachine.queue_state_change(
                 random.choice(IDLE_TRANSITIONS)
             )
@@ -330,7 +331,7 @@ class RunState(c_statemachine.State):
         self._statemachine.entity._c_animation.set_animation(random.choice(RUN))
         # Generate a target position using similar logic to WalkState.
         self._target_position = self._statemachine.entity["target_location"]
-        print(f"[RunState] Entered: target_position set to {self._target_position}")
+        # print(f"[RunState] Entered: target_position set to {self._target_position}")
 
     def update(self):
         # print(
@@ -368,7 +369,7 @@ class SitState(c_statemachine.State):
         self._wait_time = random.random() * 3 + 2
         self._counter = 0
         self._statemachine.entity.velocity.x = 0
-        print(f"[SitState] Entered: waiting for {self._wait_time:.2f} seconds.")
+        # print(f"[SitState] Entered: waiting for {self._wait_time:.2f} seconds.")
 
     def update(self):
         # print(f"[SitState] Updating: Counter {self._counter:.2f}/{self._wait_time:.2f}")
@@ -397,7 +398,7 @@ class BowSitState(c_statemachine.State):
         self._wait_time = random.random() * 3 + 2
         self._counter = 0
         self._statemachine.entity.velocity.x = 0
-        print(f"[BowSitState] Entered: waiting for {self._wait_time:.2f} seconds.")
+        # print(f"[BowSitState] Entered: waiting for {self._wait_time:.2f} seconds.")
 
     def update(self):
         # print(
@@ -428,7 +429,7 @@ class SleepState(c_statemachine.State):
         self._sleep_time = random.random() * 5 + 5
         self._counter = 0
         self._statemachine.entity.velocity.x = 0
-        print(f"[SleepState] Entered: sleeping for {self._sleep_time:.2f} seconds.")
+        # print(f"[SleepState] Entered: sleeping for {self._sleep_time:.2f} seconds.")
 
     def update(self):
         # print(
@@ -454,7 +455,7 @@ class DigDirtState(c_statemachine.State):
         # Assume an animation named "Dig_Dirt" exists for the digging action.
         self._statemachine.entity._c_animation.set_animation("Dig_Dirt")
         self._statemachine.entity.velocity.x = 0
-        print("[DigDirtState] Entered: starting to dig dirt.")
+        # print("[DigDirtState] Entered: starting to dig dirt.")
 
     def update(self):
         # print("[DigDirtState] Updating: checking if dig animation is finished.")
@@ -483,7 +484,7 @@ class PoopState(c_statemachine.State):
         self._wait_time = random.random() * 2 + 1
         self._counter = 0
         self._statemachine.entity.velocity.x = 0
-        print(f"[PoopState] Entered: pooping for {self._wait_time:.2f} seconds.")
+        # print(f"[PoopState] Entered: pooping for {self._wait_time:.2f} seconds.")
 
     def update(self):
         # print(
@@ -511,9 +512,9 @@ class SleepToIdleTransitionState(c_statemachine.State):
     def enter(self):
         self._counter = 0
         self._statemachine.entity.velocity.x = 0
-        print(
-            "[SleepToIdleTransitionState] Entered: preparing to transition from sleep to idle."
-        )
+        # print(
+        # "[SleepToIdleTransitionState] Entered: preparing to transition from sleep to idle."
+        # )
 
     def update(self):
         # print(
@@ -540,7 +541,7 @@ class SitToIdleTransitionState(c_statemachine.State):
     def enter(self):
         self._counter = 0
         self._statemachine.entity.velocity.x = 0
-        print("[SitToIdleTransitionState] Entered: transitioning from sit to idle.")
+        # print("[SitToIdleTransitionState] Entered: transitioning from sit to idle.")
 
     def update(self):
         # print(
@@ -566,7 +567,7 @@ class IdleToSitTransitionState(c_statemachine.State):
     def enter(self):
         self._counter = 0
         self._statemachine.entity.velocity.x = 0
-        print("[IdleToSitTransitionState] Entered: preparing to sit from idle.")
+        # print("[IdleToSitTransitionState] Entered: preparing to sit from idle.")
 
     def update(self):
         # print(
@@ -593,9 +594,9 @@ class DigToPoopTransitionState(c_statemachine.State):
     def enter(self):
         self._counter = 0
         self._statemachine.entity.velocity.x = 0
-        print(
-            "[DigToPoopTransitionState] Entered: transitioning from digging to pooping."
-        )
+        # print(
+        #     "[DigToPoopTransitionState] Entered: transitioning from digging to pooping."
+        # )
 
     def update(self):
         # print(
@@ -624,9 +625,9 @@ class AggressState(c_statemachine.State):
         # Define an aggressive period between 1 and 4 seconds.
         self._aggress_time = random.random() * 3 + 1
         self._counter = 0
-        print(
-            f"[AggressState] Entered: aggressive behavior for {self._aggress_time:.2f} seconds."
-        )
+        # print(
+        #     f"[AggressState] Entered: aggressive behavior for {self._aggress_time:.2f} seconds."
+        # )
 
     def update(self):
         # print(
@@ -635,7 +636,7 @@ class AggressState(c_statemachine.State):
         self._counter += constants.DELTA_TIME
         # print("counter:", self._counter)
         if self._counter > self._aggress_time:
-            print("transitioning")
+            # print("transitioning")
             # Once the aggressive period ends, transition back to idle.
             self._statemachine.queue_state_change(IDLE_STATE)
 
@@ -659,7 +660,7 @@ def _c_anim_update(self):
     self.entity._fb_painter.drawPixmap(0, 0, sprite)
 
 
-class Assistant(multiqtwindow.WindowWrapper):
+class Assistant(transparentwindow.HiddenWindowWrapper):
 
     def __init__(self, name: str = "stella.ai"):
         super().__init__(
@@ -682,15 +683,6 @@ class Assistant(multiqtwindow.WindowWrapper):
         self._c_statemachine = self.add_component(
             c_statemachine.StateMachineComponent()
         )
-        self._c_wake_word = self.add_component(
-            c_wake_word.WakeWordComponent(
-                ["assets/picovoice_elaina_trained.ppn"],
-                [],
-                "voice_activated",
-            ),
-        )
-
-        self._c_wake_word.start()
 
         # configure components
         # scale all of animation frame sizes to 100x100

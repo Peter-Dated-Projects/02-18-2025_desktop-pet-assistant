@@ -46,6 +46,9 @@ class SignalHandler:
         return self._signals
 
     def get_signal(self, signal_name: str):
+        if signal_name not in self._signals:
+            # create
+            self.register_signal(signal_name, [])
         return self._signals[signal_name]
 
 
